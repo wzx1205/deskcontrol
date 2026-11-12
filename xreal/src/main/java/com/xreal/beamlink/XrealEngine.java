@@ -30,10 +30,12 @@ public final class XrealEngine {
             @Override public void onError(String message) { Session.lastError = message; }
         });
         running = true;
+        XrealHooks.enableAsync(app);
     }
 
     public static synchronized void stop(Context context) {
         Context app = context.getApplicationContext();
+        XrealHooks.disableAsync(app);
         Session.stopUsb();
         try {
             app.stopService(new Intent(app, GlassesService.class));
