@@ -45,6 +45,8 @@ public class GlassesService extends Service {
     public static final String ACTION_SHOW = "com.xreal.beamlink.SHOW";
     public static final String ACTION_CAPTURE = "com.xreal.beamlink.CAPTURE";
     public static final String ACTION_STOP_CAPTURE = "com.xreal.beamlink.STOP_CAPTURE";
+    public static final String ACTION_OPEN_APP = "com.xreal.beamlink.OPEN_APP";
+    public static final String EXTRA_PACKAGE = "pkg";
     public static final String EXTRA_RESULT_CODE = "result_code";
     public static final String EXTRA_RESULT_DATA = "result_data";
 
@@ -56,6 +58,7 @@ public class GlassesService extends Service {
 
     private MediaProjection projection;
     private VirtualDisplay virtualDisplay;
+    private VirtualDisplay appDisplay;
 
     private final DisplayManager.DisplayListener displayListener = new DisplayManager.DisplayListener() {
         @Override public void onDisplayAdded(int displayId) { maybeShow(); }
@@ -129,6 +132,8 @@ public class GlassesService extends Service {
                     intent.getParcelableExtra(EXTRA_RESULT_DATA));
         } else if (ACTION_STOP_CAPTURE.equals(action)) {
             stopCapture();
+        } else if (ACTION_OPEN_APP.equals(action)) {
+            openApp(intent.getStringExtra(EXTRA_PACKAGE));
         } else {
             maybeShow();
         }
@@ -275,9 +280,64 @@ public class GlassesService extends Service {
 
     private void stopCapture() {
         stopVirtualDisplayOnly();
+        stopAppDisplay();
         if (projection != null) {
             try { projection.stop(); } catch (Throwable ignored) {}
             projection = null;
+        }
+    }
+
+    /** 把某个 App 直接启动到引擎自己的 1920x1080 VirtualDisplay 上，Surface 喂给 3DoF 渲染器。
+     *  不再经过 MediaProjection / 手机屏幕抓取（hook 解除限制后这条才成立）。 */
+    private void openApp(final String pkg) {
+        if (pkg == null || pkg.isEmpty()) return;
+        SurfaceTexture st = Session.captureSurfaceTexture;
+        if (st == null) {
+            // 渲染器还没把外部纹理建好，稍后再试
+            handler.postDelayed(new Runnable() {
+                @Override public void run() { openApp(pkg); }
+            }, 300);
+            return;
+        }
+        stopCapture();
+        final int w = 1920, h = 1080;
+        st.setDefaultBufferSize(w, h);
+        try {
+            appDisplay = dm.createVirtualDisplay("xreal-app", w, h, 320,
+                    new android.view.Surface(st),
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
+                            | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY,
+                    null, handler);
+        } catch (Throwable t) {
+            Log.e(TAG, "create app display failed", t);
+            return;
+        }
+        Session.captureWidth = w;
+        Session.captureHeight = h;
+        Session.captureRotation = 0;
+        Session.captureSingleApp = false;
+        Session.captureActive = true;
+
+        Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
+        if (launch == null) {
+            Log.e(TAG, "no launch intent for " + pkg);
+            return;
+        }
+        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        android.app.ActivityOptions opts = android.app.ActivityOptions.makeBasic()
+                .setLaunchDisplayId(appDisplay.getDisplay().getDisplayId());
+        try {
+            startActivity(launch, opts.toBundle());
+            Log.i("VdApp", "launched " + pkg + " on display " + appDisplay.getDisplay().getDisplayId());
+        } catch (Throwable t) {
+            Log.e("VdApp", "launch failed: " + pkg, t);
+        }
+    }
+
+    private void stopAppDisplay() {
+        if (appDisplay != null) {
+            try { appDisplay.release(); } catch (Throwable ignored) {}
+            appDisplay = null;
         }
     }
 

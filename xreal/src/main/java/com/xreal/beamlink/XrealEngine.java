@@ -68,6 +68,15 @@ public final class XrealEngine {
         return Session.stats;
     }
 
+    /** 把某个 App 直接起在引擎自己的 1920x1080 VirtualDisplay 上（不经过手机抓屏）。
+     *  hook 生效时才能成；失败会在 logcat 里留 VdApp 记录。 */
+    public static void openApp(Context context, String pkg) {
+        Context app = context.getApplicationContext();
+        app.startForegroundService(new Intent(app, GlassesService.class)
+                .setAction(GlassesService.ACTION_OPEN_APP)
+                .putExtra(GlassesService.EXTRA_PACKAGE, pkg));
+    }
+
     public static boolean glassesConnected() { return Session.glassesDisplayId >= 0; }
 
     public static String lastError() { return Session.lastError; }
