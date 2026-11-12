@@ -175,6 +175,27 @@ object AppLauncher {
         flowId: String,
         origin: LaunchOrigin
     ): Result {
+        // 3DoF 巨幕开启时，所有"投到外接屏"的请求都改走引擎自建的 VirtualDisplay。
+        // 直接落到物理眼镜屏会被 3DoF Presentation 盖住（表现为"应用起不来"）。
+        if (com.xreal.beamlink.XrealEngine.isRunning() && displayId != 0) {
+            return try {
+                com.xreal.beamlink.XrealEngine.openApp(context, packageName)
+                DiagnosticsLog.add(
+                    "Launch[$flowId]: event=DISPATCH stage=XREAL_VD " +
+                        "package=$packageName requestedDisplayId=$displayId"
+                )
+                Result(Outcome.EXTERNAL_REQUEST_ACCEPTED, flowId)
+            } catch (ex: Exception) {
+                fail(
+                    context,
+                    FailureReason.START_FAILED,
+                    R.string.app_launch_detail_unknown_failure,
+                    throwable = ex,
+                    stage = "XREAL_VD",
+                    flowId = flowId
+                )
+            }
+        }
         val component = resolveLauncherComponent(context, packageName, className, flowId)
             ?: return fail(
                 context,

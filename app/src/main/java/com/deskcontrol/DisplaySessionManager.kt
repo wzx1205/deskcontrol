@@ -151,7 +151,12 @@ object DisplaySessionManager {
         // Some OEMs expose a recording display as PRESENTATION while their real HDMI display is
         // only visible in the complete inventory. Compare every public non-default display and
         // keep presentation membership as a preference rather than a discovery gate.
-        val rawDisplays = allDisplays.filter { it.displayId != Display.DEFAULT_DISPLAY }
+        // 引擎自建的 VirtualDisplay 是渲染管线的一部分，不应作为用户可选择的投屏目标
+        val rawDisplays = allDisplays.filter { display ->
+            display.displayId != Display.DEFAULT_DISPLAY &&
+                !(com.xreal.beamlink.XrealEngine.isRunning() &&
+                    display.displayId == com.xreal.beamlink.XrealEngine.appDisplayId())
+        }
         val presentationIds = presentationDisplays.map { it.displayId }.toSet()
         val policySnapshot = policyProbes(rawDisplays, trigger)
         val policyProbes = policySnapshot.probes

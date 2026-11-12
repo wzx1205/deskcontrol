@@ -2387,9 +2387,17 @@ class ControlAccessibilityService : AccessibilityService() {
     }
 
     private fun trySetDisplayId(builder: GestureDescription.Builder, displayId: Int) {
+        // 3DoF 巨幕开启时，App 在引擎自建的 VirtualDisplay 里，
+        // 手势也必须注入那块 VD（光标覆盖层本身仍在物理眼镜屏上）
+        val target = if (displayId != 0 && com.xreal.beamlink.XrealEngine.isRunning()) {
+            val vd = com.xreal.beamlink.XrealEngine.appDisplayId()
+            if (vd >= 0) vd else displayId
+        } else {
+            displayId
+        }
         try {
             val method = builder.javaClass.getMethod("setDisplayId", Int::class.javaPrimitiveType)
-            method.invoke(builder, displayId)
+            method.invoke(builder, target)
         } catch (ignored: Exception) {
             // Not supported on this API level.
         }

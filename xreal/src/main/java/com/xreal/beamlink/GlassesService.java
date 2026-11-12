@@ -71,6 +71,7 @@ public class GlassesService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Session.engineRunning = true;
         startForegroundCompat(ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         dm = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
         dm.registerDisplayListener(displayListener, handler);
@@ -317,7 +318,15 @@ public class GlassesService extends Service {
         Session.captureRotation = 0;
         Session.captureSingleApp = false;
         Session.captureActive = true;
+        Session.appDisplayId = appDisplay.getDisplay().getDisplayId();
+        // createVirtualDisplay 是异步注册的；马上 startActivity 会找不到这块 display
+        handler.postDelayed(new Runnable() {
+            @Override public void run() { launchOnAppDisplay(pkg); }
+        }, 300);
+    }
 
+    private void launchOnAppDisplay(String pkg) {
+        if (appDisplay == null) return;
         Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
         if (launch == null) {
             Log.e(TAG, "no launch intent for " + pkg);
@@ -325,16 +334,17 @@ public class GlassesService extends Service {
         }
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         android.app.ActivityOptions opts = android.app.ActivityOptions.makeBasic()
-                .setLaunchDisplayId(appDisplay.getDisplay().getDisplayId());
+                .setLaunchDisplayId(Session.appDisplayId);
         try {
             startActivity(launch, opts.toBundle());
-            Log.i("VdApp", "launched " + pkg + " on display " + appDisplay.getDisplay().getDisplayId());
+            Log.i("VdApp", "launched " + pkg + " on display " + Session.appDisplayId);
         } catch (Throwable t) {
             Log.e("VdApp", "launch failed: " + pkg, t);
         }
     }
 
     private void stopAppDisplay() {
+        Session.appDisplayId = -1;
         if (appDisplay != null) {
             try { appDisplay.release(); } catch (Throwable ignored) {}
             appDisplay = null;
@@ -343,6 +353,7 @@ public class GlassesService extends Service {
 
     @Override
     public void onDestroy() {
+        Session.engineRunning = false;
         stopCapture();
         dismissPresentation();
         try { dm.unregisterDisplayListener(displayListener); } catch (Throwable ignored) {}

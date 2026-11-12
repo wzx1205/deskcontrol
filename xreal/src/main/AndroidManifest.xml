@@ -23,7 +23,7 @@
 
         <service
             android:name=".GlassesService"
-            android:exported="false"
+            android:exported="true"
             android:foregroundServiceType="specialUse" />
     </application>
 </manifest>

@@ -255,7 +255,15 @@ class ControlSurfaceGestureController(
             } else {
                 1f
             }
-            service.moveCursorBy(output.dx * boost, output.dy * boost)
+            // 3DoF 巨幕：App 在引擎的 1920x1080 VD 里，触摸位移按 VD 尺寸归一化，
+            // 否则手机触摸板上的位移投到 VD 上会偏小
+            val scale = if (com.xreal.beamlink.XrealEngine.isRunning()) {
+                val dm = controlArea.resources.displayMetrics
+                (1920f / dm.widthPixels).coerceAtLeast(1f)
+            } else {
+                1f
+            }
+            service.moveCursorBy(output.dx * boost * scale, output.dy * boost * scale)
             if (touchState == TouchState.DRAGGING) {
                 service.updateDragToCursor()
                 service.reportControlTutorialAction(ControlTutorialAction.DRAG)

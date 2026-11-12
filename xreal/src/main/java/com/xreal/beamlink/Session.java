@@ -64,6 +64,10 @@ public final class Session {
 
     /** 眼镜屏与光标 */
     public static volatile int glassesDisplayId = -1;
+    /** 引擎服务真实运行状态（由 GlassesService 生命周期置位，供 DeskControl 判断是否走 VD 路由） */
+    public static volatile boolean engineRunning;
+    /** 引擎自建、承载 App 的 VirtualDisplay（openApp 后才有） */
+    public static volatile int appDisplayId = -1;
     public static volatile int glassesWidth = 1920;
     public static volatile int glassesHeight = 1080;
     public static volatile float cursorX = 960f;

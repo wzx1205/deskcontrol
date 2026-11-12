@@ -43,7 +43,7 @@ public final class XrealEngine {
         running = false;
     }
 
-    public static boolean isRunning() { return running; }
+    public static boolean isRunning() { return Session.engineRunning; }
 
     /** 重定心：把当前朝向设为巨幕正前方 */
     public static void recenter() { Session.recenter(); }
@@ -80,6 +80,9 @@ public final class XrealEngine {
     }
 
     public static boolean glassesConnected() { return Session.glassesDisplayId >= 0; }
+
+    /** 引擎自建、承载 App 的 VirtualDisplay id；没调用过 openApp 时是 -1 */
+    public static int appDisplayId() { return Session.appDisplayId; }
 
     public static String lastError() { return Session.lastError; }
 }
