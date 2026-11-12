@@ -47,6 +47,23 @@ class SettingsOverviewFragment : Fragment() {
             ) { open(SettingsPage.DISPLAY) }
         )
 
+        // XREAL Air 2 Pro：3DoF 虚拟巨幕（内核 + IMU 采集都在 :xreal 模块里）
+        pageLayout.addGroup(
+            R.string.settings_xreal_group,
+            context.navigationRow(
+                R.drawable.ic_settings_display,
+                R.string.settings_xreal_title,
+                getString(R.string.settings_xreal_summary)
+            ) {
+                startActivity(
+                    android.content.Intent(
+                        requireContext(),
+                        com.xreal.beamlink.MainActivity::class.java
+                    )
+                )
+            }
+        )
+
         val pinnedCount = SwitchBarStore.getFavoriteSlots(context).count { !it.isNullOrBlank() }
         pageLayout.addGroup(
             R.string.settings_overview_controls,

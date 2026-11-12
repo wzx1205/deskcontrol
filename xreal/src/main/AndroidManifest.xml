@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 副屏 Presentation 兜底：ColorOS 拒绝第三方 App 用 setLaunchDisplayId 往眼镜屏起 Activity -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- USB Host：读取 XREAL Air 2 Pro 的 IMU HID 接口 -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="true" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <queries>
+        <package android:name="com.android.settings" />
+        <package android:name="com.deskcontrol" />
+        <package android:name="com.suspace.deskcontrol" />
+        <package android:name="com.android.launcher" />
+    </queries>
+
+    <application>
+        <!-- 眼镜 3DoF 巨幕控制台（从 DeskControl 设置页进入） -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="XREAL 眼镜巨幕"
+            android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|density"
+            android:resizeableActivity="true" />
+
+        <activity
+            android:name=".GlassesActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|density|uiMode"
+            android:screenOrientation="landscape"
+            android:resizeableActivity="true" />
+
+        <!-- 允许 adb/am 直接开关触摸板 -->
+        <service android:name=".TouchPadService" android:exported="true" />
+
+        <service
+            android:name=".GlassesService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection|specialUse" />
+
+        <service
+            android:name=".GestureAccessibilityService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+    </application>
+</manifest>

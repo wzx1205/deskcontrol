@@ -293,4 +293,7 @@
     <string name="empty_text" translatable="false"></string>
     <string name="diagnostics_log_time_format" translatable="false">HH:mm:ss</string>
     <string name="diagnostics_log_line_format" translatable="false">[%1$s] %2$s</string>
+    <string name="settings_xreal_group">XREAL 眼镜</string>
+    <string name="settings_xreal_title">3DoF 巨幕显示</string>
+    <string name="settings_xreal_summary">用 XREAL Air 2 Pro 当 3DoF 虚拟巨幕（IMU + 渲染内核已内置）</string>
 </resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">XREAL BeamLink</string>
+    <string name="a11y_desc">把触摸板的手势注入到前台应用（只做手势，不读取屏幕内容）</string>
+</resources>
