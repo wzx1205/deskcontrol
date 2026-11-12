@@ -58,8 +58,12 @@ class SettingsOverviewFragment : Fragment() {
                 val ctx = requireContext()
                 if (com.xreal.beamlink.XrealEngine.isRunning()) {
                     com.xreal.beamlink.XrealEngine.stop(ctx)
+                    android.widget.Toast.makeText(ctx, "已关闭 3DoF 巨幕", android.widget.Toast.LENGTH_SHORT).show()
                 } else {
                     com.xreal.beamlink.XrealEngine.start(ctx)
+                    val msg = if (com.xreal.beamlink.XrealEngine.glassesConnected())
+                        "已开启 3DoF 巨幕" else "已开启，等待眼镜接入"
+                    android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
         )
