@@ -55,12 +55,12 @@ class SettingsOverviewFragment : Fragment() {
                 R.string.settings_xreal_title,
                 getString(R.string.settings_xreal_summary)
             ) {
-                startActivity(
-                    android.content.Intent(
-                        requireContext(),
-                        com.xreal.beamlink.MainActivity::class.java
-                    )
-                )
+                val ctx = requireContext()
+                if (com.xreal.beamlink.XrealEngine.isRunning()) {
+                    com.xreal.beamlink.XrealEngine.stop(ctx)
+                } else {
+                    com.xreal.beamlink.XrealEngine.start(ctx)
+                }
             }
         )
 
